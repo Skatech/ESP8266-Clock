@@ -111,15 +111,24 @@ void setup() {
             display.copyBrightnessAndColorScheme(
                 &state.displayBrightness, state.displayColors);
         
-            const char * msg = "Display scheme updated";
+            const char* msg = "Display scheme updated";
             server.send(200, "text/html", msg);
             Serial.println(msg);
         }
         else {
-            const char * msg = "Display scheme update failed";
+            const char* msg = "Display scheme update failed";
             server.send(400, "text/html", msg);
             Serial.println(msg);
         }
+    });
+
+    server.on("/set-conn", HTTP_POST, []() {
+        String ssid = server.arg("ssid");
+        String pass = server.arg("pass");
+        ssid.toCharArray(state.wifiSSID, 16);
+        pass.toCharArray(state.wifiPassword, 16);
+        server.send(true ? 200 : 400, "text/html", "OK");
+        Serial.println("Connection data changed");
     });
 
     server.on("/write-config", HTTP_POST, []() {
@@ -145,18 +154,8 @@ void setup() {
     server.begin();
 }
 
-int lastsec = -1;
-
 void loop() {
-    //time_t rawtime = time(NULL);
-    //struct tm * loctime = localtime(&rawtime);
-    struct tm* loctime = Time::now().toDetails();
-
-    if (loctime->tm_sec != lastsec) {
-        lastsec = loctime->tm_sec;
-        display.stripUpdate(loctime->tm_hour * 3600 + loctime->tm_min * 60 + loctime->tm_sec);
-        //Serial.print(asctime(loctime));
-    }
+    display.poll();
 
     if (WiFi.status() != wl_status) {
         wl_status = WiFi.status();

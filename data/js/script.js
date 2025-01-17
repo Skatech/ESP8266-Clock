@@ -208,6 +208,26 @@ function buttonCommitDisplaySettingsClick() {
     rq.send(`brightness=${brightness}&colors=${colors}`)
 }
 
+/** Sends custom POST request
+ * @param {string} method * @param {Object} arguments @param {undefined | (r:XMLHttpRequest) => void} handler */
+function sendPostAsync(method, handler) {
+    const brightness = getOrSetDisplayBrightness()
+    const colors = getOrSetDisplayColors()
+    const rq = new XMLHttpRequest()
+    rq.open('POST', method, true)
+    rq.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+    rq.onreadystatechange = function () {
+        if (handler) {
+            handler(rq);
+        }
+        else console.log(rq.readyState === 4
+            ? "Request succeeded"
+            : "Request failed")
+    }
+    rq.send(Object.keys(arguments).reduce(
+        (a, k) => a + `${a.length ? '&' : ''}${k}=${arguments[k]}`, ""))
+}
+
 function displayColorsTextChanged(value) {
     updateColorPickers(value)
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <time.h>
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h> 
 
@@ -46,6 +47,15 @@ class ClockDisplay {
         _strip.setBrightness(LED_BRIGHTNESS); 
     }
 
+    // poll to update clock display
+    void poll() {
+        static time_t prevt;
+        time_t t = time(NULL);
+        if (prevt != t) {
+            stripUpdate(prevt = t);
+        }
+    }
+
     void clear() {
         _strip.clear();
     }
@@ -82,7 +92,6 @@ class ClockDisplay {
         return true;
     }
 
-
     void setBrightnessAndColorScheme(uint8_t brightness, uint32_t* colors) {
         _strip.setBrightness(brightness);
         const int len = sizeof(_colors) / sizeof(uint32_t);
@@ -110,30 +119,82 @@ class ClockDisplay {
         return String(buf);
     }
 
-    void stripUpdate(unsigned long time) {
-        uint8_t ss = time % 60;
-        uint8_t hh = time / 3600;
-        uint8_t mm = time / 60 - hh * 60; 
+    void stripUpdate(time_t time) {
+        tm* lct = localtime(&time);
+        uint8_t ss = lct->tm_sec, mm = lct->tm_min, hh = lct->tm_hour;
 
         for(uint8_t i = 0; i < LED_COUNT; i++) {
-            if (_colors[IDC_SECONDS] && (ss == i / LEDS_PER_MINUTE)) {
+            if (_colors[IDC_SECONDS] && (ss == i / LEDS_PER_MINUTE)) { // draw second marker
                 _strip.setPixelColor(i, _colors[IDC_SECONDS]);
             }
-            else if (mm == i / LEDS_PER_MINUTE) {
+            else if (mm == i / LEDS_PER_MINUTE && (ss % 2 == 0)) { // draw minute marker (even seconds only)
                 _strip.setPixelColor(i, _colors[IDC_MINUTES]);
+            } 
+            else if (((i % LEDS_PER_HOUR) || (ss % 2)) &&  // draw hour marker (on tick leds odd seconds only)
+                    (12 - 1 + hh) % 12 == (LED_COUNT + i - 1 - mm * LEDS_PER_HOUR / 60) % LED_COUNT / LEDS_PER_HOUR) {
+                _strip.setPixelColor(i, (hh < 6 || hh > 17)
+                    ? _colors[IDC_HOURS_N]
+                    : _colors[IDC_HOURS_D]);
             }
-            else if (i % LEDS_PER_HOUR) {
-                if ((hh % 12) == (i / LEDS_PER_HOUR)) {
-                    _strip.setPixelColor(i, (hh < 6 || hh > 17)
-                        ? _colors[IDC_HOURS_N]
-                        : _colors[IDC_HOURS_D]);
-                }
-                else _strip.setPixelColor(i, 0x000000);
+            else if (i % LEDS_PER_HOUR) { // damp non-tick space
+                _strip.setPixelColor(i, 0x000000);
             }
-            else {
-                _strip.setPixelColor(i, _colors[IDC_TICKS]);
-            }
+            else _strip.setPixelColor(i, _colors[IDC_TICKS]); // draw ticks
         }
         _strip.show();
     }
+
+    // // hours indication smooth steps
+    // void stripUpdate__(unsigned long time) {
+    //     uint8_t ss = time % 60;
+    //     uint8_t hh = time / 3600;
+    //     uint8_t mm = time / 60 - hh * 60; 
+    //     for(uint8_t i = 0; i < LED_COUNT; i++) {
+    //         if (_colors[IDC_SECONDS] && (ss == i / LEDS_PER_MINUTE)) {
+    //             _strip.setPixelColor(i, _colors[IDC_SECONDS]);
+    //         }
+    //         else if (mm == i / LEDS_PER_MINUTE) {
+    //             _strip.setPixelColor(i, _colors[IDC_MINUTES]);
+    //         }
+    //         else if (i % LEDS_PER_HOUR) {
+    //             if ((11 + hh) % 12 == (LED_COUNT + i - 1 - mm * LEDS_PER_HOUR / 60) % LED_COUNT / LEDS_PER_HOUR) {
+    //                 _strip.setPixelColor(i, (hh < 6 || hh > 17)
+    //                     ? _colors[IDC_HOURS_N]
+    //                     : _colors[IDC_HOURS_D]);
+    //             }
+    //             else _strip.setPixelColor(i, 0x000000);
+    //         }
+    //         else {
+    //             _strip.setPixelColor(i, _colors[IDC_TICKS]);
+    //         }
+    //     }
+    //     _strip.show();
+    // }
+
+    // // hours indication rough steps after hour changes
+    // void stripUpdate_(unsigned long time) {
+    //     uint8_t ss = time % 60;
+    //     uint8_t hh = time / 3600;
+    //     uint8_t mm = time / 60 - hh * 60; 
+    //     for(uint8_t i = 0; i < LED_COUNT; i++) {
+    //         if (_colors[IDC_SECONDS] && (ss == i / LEDS_PER_MINUTE)) {
+    //             _strip.setPixelColor(i, _colors[IDC_SECONDS]);
+    //         }
+    //         else if (mm == i / LEDS_PER_MINUTE) {
+    //             _strip.setPixelColor(i, _colors[IDC_MINUTES]);
+    //         }
+    //         else if (i % LEDS_PER_HOUR) {
+    //             if ((hh % 12) == (i / LEDS_PER_HOUR)) {
+    //                 _strip.setPixelColor(i, (hh < 6 || hh > 17)
+    //                     ? _colors[IDC_HOURS_N]
+    //                     : _colors[IDC_HOURS_D]);
+    //             }
+    //             else _strip.setPixelColor(i, 0x000000);
+    //         }
+    //         else {
+    //             _strip.setPixelColor(i, _colors[IDC_TICKS]);
+    //         }
+    //     }
+    //     _strip.show();
+    // }
 };
