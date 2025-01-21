@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266NetBIOS.h>
 #include <FS.h>
 #include <LittleFS.h>
 #include <time.h>
@@ -64,7 +65,10 @@ void setup() {
     Serial.println(IPAddress(state.stationSubnet));
     Serial.print("SSID Name:   ");
     Serial.println(state.wifiSSID);
-
+    
+    Serial.print("NETBios:     ");
+    Serial.println(NBNS.begin("hallclock") ? "OK (hallclock)" : "FAILED");
+    
     Serial.print("Initializing filesystem: ");
     Serial.println(LittleFS.begin() ? "OK" : "FAILED");
 
@@ -150,8 +154,15 @@ void setup() {
         server.send(200, "text/html", "SNTP restarted");
     });
 
+    server.on("/test", HTTP_GET, []() {
+        server.send(200, "text/plain", "OK");
+        display.test();
+    });
+
     server.serveStatic("/", LittleFS, "/", "no-cache"/*"max-age=3600"*/); //86400
     server.begin();
+
+    display.test();
 }
 
 void loop() {

@@ -47,6 +47,17 @@ class ClockDisplay {
         _strip.setBrightness(LED_BRIGHTNESS); 
     }
 
+    void test() {
+        uint32_t colors[] = { 0xFF0000, 0x00FF00, 0x0000FF, 0xFFFFFF };
+        for (unsigned int i = 0; i < sizeof(colors) / sizeof(uint32_t); ++i) {
+            _strip.fill(colors[i], 0, LED_COUNT);
+            _strip.show();
+            delay(1000);
+        }
+        _strip.clear();
+        _strip.show();
+    }
+
     // poll to update clock display
     void poll() {
         static time_t prevt;
