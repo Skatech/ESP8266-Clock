@@ -19,7 +19,7 @@
 #define DEFAULT_GATEWAY IPADDR4_INIT_BYTES(192,168,0,1)
 #define DEFAULT_SUBNET IPADDR4_INIT_BYTES(255,255,255,0)
 
-#define COLOR_TICKS   0x080822
+#define COLOR_TICKS   0x0B0A00
 #define COLOR_HOURS_N 0x000044
 #define COLOR_HOURS_D 0x3333AA
 #define COLOR_MINUTES 0xFF0000
@@ -70,7 +70,7 @@ class Configuration {
 
     void loadDefaults() {
         stateFormat = STATE_FORMAT_VERSION;
-        displayBrightness = 25;
+        displayBrightness = 50;
         timezone = 3;
         daylight = 0;
         ntpenabled = 1;

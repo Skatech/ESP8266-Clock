@@ -6,9 +6,9 @@
 
 #define LED_PIN   4
 #define LED_COUNT 60 
-#define LED_BRIGHTNESS 25
+#define LED_BRIGHTNESS 50
 
-// #define COLOR_TICKS   0x080822
+// #define COLOR_TICKS   0x0B0A00 //0x080822
 // #define COLOR_HOURS_N 0x000044
 // #define COLOR_HOURS_D 0x3333AA
 // #define COLOR_MINUTES 0xFF0000
@@ -44,7 +44,6 @@ class ClockDisplay {
     void initialize(uint8_t brightness, uint32_t* colors) {
         setBrightnessAndColorScheme(brightness, colors);
         _strip.begin();
-        _strip.setBrightness(LED_BRIGHTNESS); 
     }
 
     void test() {
@@ -103,20 +102,40 @@ class ClockDisplay {
         return true;
     }
 
+    // Input hex string format: FF:AAAAAABBBBBBCCCCCCDDDDDDEEEEEE
+    // (brightness : hour-ticks-color hour-night-color hour-day-color minutes-color seconds-color)
+    bool trySetColorScheme2(String input) {
+        uint32_t bright; uint32_t colors[5];
+        if (input.length() == (2 + 1 + 6 * 5) && 
+                sscanf(input.c_str(), "%2x:%6x%6x%6x%6x%6x", &bright,
+                    &colors[0], &colors[1], &colors[2], &colors[3], &colors[4]) == 6 &&
+                bright < 0x100) {
+                setBrightnessAndColorScheme(bright, colors);   
+            return true;
+        }
+        return false;
+    }
+
+    String getColorScheme2() {
+        char buf[2 + 1 + 6 * 5 + 1];
+        sprintf(buf, "%02X:%06X%06X%06X%06X%06X", _strip.getBrightness(),
+            _colors[0], _colors[1], _colors[2], _colors[3], _colors[4]);
+        return String(buf);
+    }
+
     void setBrightnessAndColorScheme(uint8_t brightness, uint32_t* colors) {
         _strip.setBrightness(brightness);
         const int len = sizeof(_colors) / sizeof(uint32_t);
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++)
             _colors[i] = colors[i];
-        }
     }
+
 
     void copyBrightnessAndColorScheme(uint8_t* brightness, uint32_t* colors) {
         brightness[0] = _strip.getBrightness();
         const int len = sizeof(_colors) / sizeof(uint32_t);
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++)
             colors[i] = _colors[i];
-        }
     }
 
     String getColorScheme() {

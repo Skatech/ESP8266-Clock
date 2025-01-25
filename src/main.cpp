@@ -47,6 +47,7 @@ void setup() {
     // Serial.print("Time Server 3: ");
     // Serial.println(state.timeServer3);
 
+
     initializeNTP();
 
     display.initialize(state.displayBrightness, state.displayColors);
