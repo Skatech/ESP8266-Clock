@@ -167,7 +167,14 @@ void setup() {
 }
 
 void loop() {
-    display.poll();
+    time_t lct = time(NULL);
+    if (lct < 1000000000LL) {
+        if (lct % 2) {
+            display.draw(WiFi.isConnected() ? 0x000044 : 0x440000, 0x0B0800);
+        }
+        else display.draw(0x000000, 0x0B0800);
+    }
+    else display.poll();
 
     if (WiFi.status() != wl_status) {
         wl_status = WiFi.status();

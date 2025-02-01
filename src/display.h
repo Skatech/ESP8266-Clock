@@ -46,6 +46,14 @@ class ClockDisplay {
         _strip.begin();
     }
 
+    void draw(uint32_t colorF, uint32_t colorT, uint16_t start = 0, uint16_t count = 0) {
+        const uint16_t numpix = _strip.numPixels();
+        for (uint16_t i = 0, imax = count ? count : numpix; i < imax; ++i) {
+            _strip.setPixelColor((i + start) % numpix, i % LEDS_PER_HOUR ? colorF : colorT);
+        }
+        _strip.show();
+    }
+
     void test() {
         uint32_t colors[] = { 0xFF0000, 0x00FF00, 0x0000FF, 0xFFFFFF };
         for (unsigned int i = 0; i < sizeof(colors) / sizeof(uint32_t); ++i) {
